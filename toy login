@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Glowing Teddy</title>
+    <style>
+        :root {
+            --bg-cozy: #0f1123;
+            --teddy-fur: #dfb479;
+            --teddy-dark: #c59758;
+            --teddy-snout: #fff0db;
+            --blush-pink: #ff9ff3;
+            --accent-pink: #ff6b81;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-cozy);
+            background-image: 
+                radial-gradient(rgba(255, 107, 129, 0.08) 1.5px, transparent 40px),
+                radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 20px);
+            background-size: 150px 150px, 60px 60px;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: #fff;
+            position: relative;
+        }
+
+        /* --- મલ્ટિ-કલર ઓરોરા લાઇટ (શરૂઆતમાં ટેડીની પાછળ નાની રહેશે) --- */
+        .toy-aurora {
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            background: radial-gradient(circle, #ff4757 0%, #70a1ff 40%, transparent 70%);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            filter: blur(35px);
+            z-index: 1;
+            opacity: 0.5;
+            animation: multiLightColor 6s infinite linear;
+            pointer-events: none;
+            transition: all 1.2s cubic-bezier(0.25, 1, 0.5, 1); /* સ્મૂથ ફેલાવવાની ઇફેક્ટ */
+        }
+
+        /* ટચ કર્યા પછી બોડી પર 'active' ક્લાસ આવતા જ આ લાઇટ આખા પેજ પર ફેલાઈ જશે */
+        body.active .toy-aurora {
+            width: 100vw;
+            height: 100vh;
+            border-radius: 0;
+            opacity: 0.35;
+            filter: blur(80px);
+        }
+
+        @keyframes multiLightColor {
+            0% { transform: translate(-50%, -50%) scale(1) rotate(0deg) hue-rotate(0deg); }
+            50% { transform: translate(-50%, -50%) scale(1.15) rotate(180deg) hue-rotate(180deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(360deg) hue-rotate(360deg); }
+        }
+
+        /* મેઈન કન્ટેનર બોક્સ */
+        .cozy-portal {
+            display: flex;
+            width: 90%;
+            max-width: 420px;
+            height: 560px;
+            background: rgba(26, 29, 58, 0.65);
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(25px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            overflow: hidden;
+            transition: max-width 0.7s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 10;
+        }
+
+        .cozy-portal.active {
+            max-width: 950px;
+        }
+
+        /* ડાબી બાજુ: સોફ્ટ ટેડી ઝોન */
+        .plushie-zone {
+            flex: 1;
+            min-width: 420px;
+            background: radial-gradient(circle, rgba(255, 169, 184, 0.05) 0%, transparent 75%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* ટેડી દગલો */
+        .pure-soft-teddy {
+            position: relative;
+            width: 150px;
+            height: 200px;
+            margin-top: 20px;
+            cursor: pointer;
+            animation: softFloat 4.5s infinite ease-in-out;
+            z-index: 12;
+        }
+
+        @keyframes softFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+
+        /* ટેડીના કાન */
+        .ear-l, .ear-r {
+            position: absolute;
+            width: 42px; height: 42px;
+            background: var(--teddy-fur);
+            border-radius: 50%;
+            top: -5px;
+            box-shadow: inset -4px -4px 0 var(--teddy-dark);
+        }
+        .ear-l { left: 10px; }
+        .ear-r { right: 10px; }
+        .ear-l::after, .ear-r::after {
+            content: ''; position: absolute; width: 22px; height: 22px;
+            background: var(--blush-pink); border-radius: 50%; top: 10px; left: 10px; opacity: 0.7;
+        }
+
+        /* ટેડીનું મોઢું */
+        .teddy-head {
+            position: absolute;
+            top: 15px; left: 15px;
+            width: 120px; height: 105px;
+            background: var(--teddy-fur);
+            border-radius: 50% 50% 48% 48%;
+            box-shadow: inset -6px -8px 0 var(--teddy-dark), 0 10px 20px rgba(0,0,0,0.15);
+            z-index: 3;
+        }
+
+        .teddy-eye-l, .teddy-eye-r {
+            position: absolute;
+            width: 10px; height: 10px;
+            background: #23273a;
+            border-radius: 50%;
+            top: 40px;
+        }
+        .teddy-eye-l { left: 30px; }
+        .teddy-eye-r { right: 30px; }
+
+        .teddy-blush-l, .teddy-blush-r {
+            position: absolute;
+            width: 16px; height: 10px;
+            background: var(--blush-pink);
+            border-radius: 50%;
+            top: 52px;
+            opacity: 0.6;
+        }
+        .teddy-blush-l { left: 20px; }
+        .teddy-blush-r { right: 20px; }
+
+        .teddy-snout-box {
+            position: absolute;
+            width: 44px; height: 32px;
+            background: var(--teddy-snout);
+            border-radius: 50%;
+            bottom: 22px; left: 38px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .teddy-nose { width: 12px; height: 8px; background: #23273a; border-radius: 50% 50% 40% 40%; margin-bottom: 2px; }
+        .teddy-smile { width: 14px; height: 6px; border-bottom: 2px solid #23273a; border-radius: 0 0 10px 10px; }
+
+        /* શરીર અને હાથ */
+        .teddy-body {
+            position: absolute;
+            top: 100px; left: 25px;
+            width: 100px; height: 90px;
+            background: var(--teddy-fur);
+            border-radius: 40px;
+            box-shadow: inset -8px -6px 0 var(--teddy-dark);
+            z-index: 2;
+        }
+        .teddy-tummy { position: absolute; width: 54px; height: 54px; background: var(--teddy-snout); border-radius: 50%; bottom: 12px; left: 23px; }
+
+        .arm-l, .arm-r {
+            position: absolute;
+            width: 30px; height: 55px;
+            background: var(--teddy-fur);
+            border-radius: 20px;
+            top: 105px;
+            box-shadow: inset -2px -2px 0 var(--teddy-dark);
+            z-index: 4;
+        }
+        .arm-l { left: 2px; transform: rotate(25deg); animation: bearWave 2s infinite ease-in-out; transform-origin: top center; }
+        .arm-r { right: 2px; transform: rotate(-25deg); }
+
+        @keyframes bearWave { 0%, 100% { transform: rotate(25deg); } 50% { transform: rotate(50deg); } }
+
+        /* પગ (ડાબો અને જમણો બંને) */
+        .leg-l, .leg-r {
+            position: absolute;
+            width: 32px; height: 40px;
+            background: var(--teddy-fur);
+            border-radius: 12px 12px 15px 15px;
+            top: 175px;
+            box-shadow: inset -4px -4px 0 var(--teddy-dark);
+            z-index: 1;
+        }
+        .leg-l { left: 35px; }
+        .leg-r { right: 35px; }
+
+        /* શેડો */
+        .plush-shadow {
+            width: 110px; height: 10px;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 50%;
+            margin-top: 25px;
+            animation: shadowSize 4.5s infinite ease-in-out;
+        }
+        @keyframes shadowSize { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(0.8); opacity: 0.2; } }
+
+        .plush-title { margin-top: 15px; font-size: 1.4rem; font-weight: bold; color: #ffbc4b; text-shadow: 0 0 10px rgba(255,188,75,0.2); }
+        
+        /* "Touch Me" હિન્ટ ટેક્સ્ટ */
+        .touch-hint {
+            margin-top: 8px; font-size: 0.9rem; color: var(--accent-pink); font-weight: 600; letter-spacing: 1px;
+            animation: pulseText 1.5s infinite;
+            display: block; /* ડિફોલ્ટ શો */
+        }
+        @keyframes pulseText { 0%, 100% { opacity: 0.4; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.05); } }
+
+        /* ટચ કર્યા પછી "Touch Me" તરત જ ગાયબ (display: none) થઈ જશે */
+        .cozy-portal.active .touch-hint {
+            display: none !important;
+        }
+
+        /* જમણી બાજુ: લોગિન પેનલ */
+        .login-zone {
+            flex: 1.2; padding: 55px; display: flex; flex-direction: column; justify-content: center;
+            opacity: 0; transform: translateX(50px); transition: all 0.6s ease-in-out; transition-delay: 0.2s; pointer-events: none;
+        }
+
+        .cozy-portal.active .login-zone { opacity: 1; transform: translateX(0); pointer-events: auto; }
+
+        .login-zone h2 { font-size: 2.2rem; color: #fff; margin-bottom: 8px; }
+        .login-zone p { color: #828aab; font-size: 0.95rem; margin-bottom: 35px; }
+
+        .input-wrapper { position: relative; margin-bottom: 25px; }
+        .input-wrapper label { display: block; font-size: 0.8rem; color: #a2a8c3; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .input-wrapper input {
+            width: 100%; padding: 15px 20px; background: rgba(0, 0, 0, 0.25);
+            border: 1px solid #323753; border-radius: 16px; color: #fff; font-size: 1rem; outline: none; transition: all 0.3s ease;
+        }
+        .input-wrapper input:focus { border-color: var(--accent-pink); box-shadow: 0 0 15px rgba(255, 107, 129, 0.15); background: rgba(0, 0, 0, 0.4); }
+
+        .cozy-btn {
+            width: 100%; padding: 16px; background: linear-gradient(135deg, #ff6b81, #ff4757);
+            border: none; border-radius: 16px; color: white; font-size: 1rem; font-weight: bold; cursor: pointer;
+            transition: all 0.3s; box-shadow: 0 8px 20px rgba(255, 107, 129, 0.25);
+        }
+        .cozy-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(255, 107, 129, 0.4); }
+    </style>
+</head>
+<body>
+
+    <!-- ઓરોરા મલ્ટિ-કલર લાઇટ જે બોડીના સેન્ટરમાં છે -->
+    <div class="toy-aurora"></div>
+
+    <div class="cozy-portal" id="mainPortal">
+        
+        <!-- ડાબો ભાગ: ક્યૂટ ટેડી રીંછ -->
+        <div class="plushie-zone">
+            
+            <div class="pure-soft-teddy" onclick="openLoginPage()">
+                <!-- કાન -->
+                <div class="ear-l"></div>
+                <div class="ear-r"></div>
+                
+                <!-- હાથ -->
+                <div class="arm-l"></div>
+                <div class="arm-r"></div>
+
+                <!-- મોઢું / માથું -->
+                <div class="teddy-head">
+                    <div class="teddy-eye-l"></div>
+                    <div class="teddy-eye-r"></div>
+                    <div class="teddy-blush-l"></div>
+                    <div class="teddy-blush-r"></div>
+                    <div class="teddy-snout-box">
+                        <div class="teddy-nose"></div>
+                        <div class="teddy-smile"></div>
+                    </div>
+                </div>
+
+                <!-- શરીર -->
+                <div class="teddy-body">
+                    <div class="teddy-tummy"></div>
+                </div>
+
+                <!-- બંને ક્યૂટ પગ -->
+                <div class="leg-l"></div>
+                <div class="leg-r"></div>
+            </div>
+
+            <!-- શેડો -->
+            <div class="plush-shadow"></div>
+
+            <div class="plush-title">Honey Teddy</div>
+            
+            <!-- ટચ થતા જ આ ગાયબ થઈ જશે -->
+            <div class="touch-hint" id="hintText">Touch Me! 🧸</div>
+        </div>
+
+        <!-- જમણી બાજુ: લોગિન ફોર્મ -->
+        <div class="login-zone">
+            <h2>Welcome, Buddy!</h2>
+            <p>Enter your details to open the secret teddy world.</p>
+
+            <form onsubmit="event.preventDefault(); alert('Logged In Successfully! 🧸✨');">
+                <div class="input-wrapper">
+                    <label>Teddy Companion Name</label>
+                    <input type="text" placeholder="e.g., FluffyBear" required>
+                </div>
+
+                <div class="input-wrapper">
+                    <label>Secret Plush Code</label>
+                    <input type="password" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="cozy-btn">Let's Play</button>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        function openLoginPage() {
+            // કાર્ડ ઓપન કરો
+            document.getElementById('mainPortal').classList.add('active');
+            // બોડી પર એક્ટિવ ક્લાસ એડ કરવાથી લાઇટ આખી સ્ક્રીનમાં ફેલાશે
+            document.body.classList.add('active');
+        }
+    </script>
+
+</body>
+</html>
